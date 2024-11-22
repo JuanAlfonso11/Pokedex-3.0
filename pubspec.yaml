@@ -1,0 +1,45 @@
+name: pokedex_final_final_final_vainita_rara_que_chequea
+description: "A new Flutter project."
+
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.5.3 <4.0.0"
+
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  http: ^1.1.0
+  cached_network_image: ^3.3.0
+  flutter_svg: ^0.22.0
+  postgres: ^2.6.0
+  path: ^1.8.3
+  graphql: ^5.2.0-beta.6
+  auto_size_text: ^3.0.0
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+
+  flutter_lints: ^5.0.0
+
+
+flutter:
+   uses-material-design: true
+   assets:
+     - assets/iconos/
+     - assets/gif/mew-spinning.gif
+
+
+
+
+
+
+
+
+
