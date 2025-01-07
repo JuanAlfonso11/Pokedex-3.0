@@ -1,14 +1,34 @@
+import java.util.Properties
+
 pluginManagement {
+    // Obtén la ruta del SDK de Flutter desde local.properties
     def flutterSdkPath = {
         def properties = new Properties()
         file("local.properties").withInputStream { properties.load(it) }
         def flutterSdkPath = properties.getProperty("flutter.sdk")
-        assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
+        assert flutterSdkPath != null : "flutter.sdk not set in local.properties"
         return flutterSdkPath
     }()
 
+    // Incluye las herramientas de Flutter Gradle
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal() // Repositorio para gestionar complementos
+    }
+}
+
+plugins {
+    // Carga el plugin de Flutter Gradle
+    id "dev.flutter.flutter-plugin-loader" version "1.0.0"
+    // Especifica las versiones de Android y Kotlin
+    id "com.android.application" version "8.3.2" apply false
+    id "org.jetbrains.kotlin.android" version "1.8.22" apply false
+}
+
+dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
@@ -16,11 +36,7 @@ pluginManagement {
     }
 }
 
-plugins {
-    id "dev.flutter.flutter-plugin-loader" version "1.0.0"
-    id "com.android.application" version "8.3.2" apply false
-    id "org.jetbrains.kotlin.android" version "1.8.22" apply false
-}
+rootProject.name = "pokedex_final_final_final_vainita_rara_que_chequea"
 
+// Incluye el módulo principal del proyecto
 include ":app"
-//v1

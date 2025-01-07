@@ -1,6 +1,10 @@
 import 'dart:convert';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:http/http.dart' as http;
 import '../../DTO/DTO.EvolutionChain.dart' as EC;
 import '../../DTO/DTO.PokemonOnly.dart' as PO;
@@ -12,12 +16,15 @@ import 'package:pokedex_final_final_final_vainita_rara_que_chequea/Paginas/Detal
 import 'package:pokedex_final_final_final_vainita_rara_que_chequea/Paginas/DetallePag/Tabs/Evoluciones/Evoluciones.dart';
 import 'package:pokedex_final_final_final_vainita_rara_que_chequea/Paginas/DetallePag/Tabs/Informacion/Informacion.dart';
 import 'package:pokedex_final_final_final_vainita_rara_que_chequea/Paginas/DetallePag/Tabs/Movimientos/Movimientos.dart';
-
+import 'package:pokedex_final_final_final_vainita_rara_que_chequea/utils/PokemonCardWidget.dart';
 typedef PokemonCallBack = void Function(int id, int favorite);
 
 class PokemonDetallePag extends StatefulWidget{
   final PokemonCallBack onSonChanged;
   final int id;
+
+
+
 
   PokemonDetallePag({ required this.id, required this.onSonChanged});
 
@@ -37,6 +44,7 @@ class _PokemonDetallePagState extends State<PokemonDetallePag> {
   late bool loadingError = false;
   bool favorite = false;
 
+
   List<String> sprites = [];
   static const double _statsVerticalLength = 12.0;
 
@@ -51,9 +59,10 @@ class _PokemonDetallePagState extends State<PokemonDetallePag> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    return loading ?
-    Scaffold(
+    return loading
+        ? Scaffold(
       body: Center(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -73,78 +82,128 @@ class _PokemonDetallePagState extends State<PokemonDetallePag> {
           ],
         ),
       ),
-    ) :
-
-    Scaffold(
+    )
+        : Scaffold(
       appBar: DetailsAppBar(),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: Stack(
         children: [
-          SizedBox(
-            height: 200,
-            child: Stack(
-              children: [
-                // imagen pokebola
-                Container(
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.all(5.0),
-                  child: const Image(
-                    image: AssetImage('assets/iconos/pokeball.png'),
-                    opacity: AlwaysStoppedAnimation(.8),
-                  ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Imagen del Pokémon y la Pokébola
+              SizedBox(
+                height: 250,
+                child: Stack(
+                  children: [
+                    // Fondo Pokébola
+                    Container(
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.all(5.0),
+                      child: const Image(
+                        image: AssetImage('assets/iconos/pokeball.png'),
+                        opacity: AlwaysStoppedAnimation(0.2),
+                      ),
+                    ),
+                    // Imagen del Pokémon
+                    Container(
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.all(10.0),
+                      child: pokemonDetails.sprites.isNotEmpty
+                          ? CachedNetworkImage(
+                        imageUrl: pokemonDetails.sprites[0],
+                        placeholder: (context, url) =>
+                        const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.red),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) =>
+                        const Icon(Icons.error),
+                        fit: BoxFit.cover,
+                      )
+                          : const Icon(Icons.error),
+                    ),
+                  ],
                 ),
-
-                //imagen del pokemon
-                Container(
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.all(5.0),
-                  child: pokemonDetails.sprites.isNotEmpty ?
-                  CachedNetworkImage(
-                    imageUrl: pokemonDetails.sprites[0],
-                    placeholder: (context, url) =>
-                    const Center(child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.red))),
-                    errorWidget: (context, url, error) =>
-                    const Icon(Icons.error),
-                    fit: BoxFit.cover,
-                  ) :
-                  const Icon(Icons.error),
+              ),
+              // Navegación interna entre Pokémon
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ElevatedButton(
+                      onPressed: pokemonId > 1
+                          ? () {
+                        _navigateToPokemon(context, pokemonId - 1);
+                      }
+                          : null,
+                      child: const Text('Anterior'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        _navigateToPokemon(context, pokemonId + 1);
+                      },
+                      child: const Text('Siguiente'),
+                    ),
+                  ],
                 ),
-              ],
+              ),
+              // Navegación entre pestañas
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildNavigationItem(0, 'Información'),
+                    _buildNavigationItem(1, 'Estadísticas'),
+                    _buildNavigationItem(2, 'Evoluciones'),
+                    _buildNavigationItem(3, 'Movimientos'),
+                  ],
+                ),
+              ),
+              // Contenido de la página
+              Expanded(
+                child: PageView(
+                  controller: _paginaController,
+                  onPageChanged: (int pagina) {
+                    setState(() {
+                      _paginaActual = pagina;
+                    });
+                  },
+                  children: [
+                    _buildSelectionInformacion(),
+                    _buildSelectionEstaditica(),
+                    _buildSelectionEvoluciones(),
+                    _buildSelectionMovimientos(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // RepaintBoundary para la tarjeta oculta
+          Positioned(
+            top: -9999,
+            left: -9999,
+            child: RepaintBoundary(
+              key: _cardKey,
+              child: PokemonCardWidget(
+                pokemonName: pokemonDetails.name,
+                id: pokemonDetails.id,
+                types: pokemonDetails.types,
+                imageUrl: pokemonDetails.sprites.isNotEmpty
+                    ? pokemonDetails.sprites[0]
+                    : 'https://via.placeholder.com/150',
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavigationItem(0, 'Informacion'),
-                _buildNavigationItem(1, 'Estadisticas'),
-                _buildNavigationItem(2, 'Evoluciones'),
-                _buildNavigationItem(3, 'Movimientos'),
-              ],
-            ),
-          ),
-          Expanded(
-            child: PageView(
-              controller: _paginaController,
-              onPageChanged: (int pagina) {
-                setState(() {
-                  _paginaActual = pagina;
-                });
-              },
-              children: [
-                _buildSelectionInformacion(),
-                _buildSelectionEstaditica(),
-                _buildSelectionEvoluciones(),
-                _buildSelectionMovimientos(),
-              ],
-            ),
-          )
         ],
       ),
     );
   }
+
+
 
 
   Widget _buildNavigationItem(int index, String title) {
@@ -234,17 +293,19 @@ class _PokemonDetallePagState extends State<PokemonDetallePag> {
   void updatePokemonFromChild(int id, int favorite) {
     onSonChanged(id, favorite);
   }
-
   AppBar DetailsAppBar() {
     pokemonDetails.name.replaceAll('-', '');
 
     return AppBar(
-      title: Text(pokemonDetails.name.substring(0, 1).toUpperCase() +
-          pokemonDetails.name.substring(1).replaceAll('-', '')),
+      title: Text(
+        pokemonDetails.name.substring(0, 1).toUpperCase() +
+            pokemonDetails.name.substring(1).replaceAll('-', ''),
+      ),
       backgroundColor: loading
           ? const Color.fromARGB(255, 202, 0, 16)
           : getColorForElement(pokemonDetails.types[0]),
       actions: [
+        // Mostrar ID del Pokémon
         Container(
           alignment: Alignment.centerRight,
           child: Text(
@@ -253,6 +314,7 @@ class _PokemonDetallePagState extends State<PokemonDetallePag> {
             style: const TextStyle(fontSize: 24),
           ),
         ),
+        // Botón de favoritos
         IconButton(
           icon: favorite
               ? const Icon(
@@ -268,9 +330,68 @@ class _PokemonDetallePagState extends State<PokemonDetallePag> {
             });
           },
         ),
+        // Botón de compartir
+        IconButton(
+          icon: const Icon(Icons.share),
+          onPressed: _sharePokemonCard,
+        ),
       ],
     );
   }
+  final GlobalKey _cardKey = GlobalKey();
+
+
+  Widget _buildPokemonCard() {
+    return RepaintBoundary(
+      key: _cardKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          CachedNetworkImage(
+            imageUrl: pokemonDetails.sprites[0],
+            placeholder: (context, url) =>
+            const CircularProgressIndicator(),
+            errorWidget: (context, url, error) =>
+            const Icon(Icons.error),
+          ),
+          Text(
+            pokemonDetails.name,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          Text('ID: ${pokemonDetails.id}'),
+          Text('Tipos: ${pokemonDetails.types.join(", ")}'),
+        ],
+      ),
+    );
+  }
+
+
+
+  Future<void> _sharePokemonCard() async {
+    try {
+      final RenderRepaintBoundary boundary =
+      _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+
+      final ui.Image image = await boundary.toImage(pixelRatio: 2.0);
+      final ByteData? byteData =
+      await image.toByteData(format: ui.ImageByteFormat.png);
+
+      if (byteData != null) {
+        final Uint8List pngBytes = byteData.buffer.asUint8List();
+
+        await Share.shareXFiles(
+          [XFile.fromData(pngBytes, name: '${pokemonDetails.name}.png')],
+          text: 'Mira mi Pokémon favorito: ${pokemonDetails.name}!',
+        );
+      }
+    } catch (e) {
+      print('Error al compartir la tarjeta: $e');
+    }
+  }
+
+
+
+
 
   // Cargar detalle pokemons
   void loadingPokemonDetails() async {
@@ -345,6 +466,18 @@ class _PokemonDetallePagState extends State<PokemonDetallePag> {
       context,
       MaterialPageRoute(builder: (context) =>
           PokemonDetallePag(id: id, onSonChanged: updatePokemonFromChild)),
+    );
+  }
+
+  void _navigateToPokemon(BuildContext context, int newId) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PokemonDetallePag(
+          id: newId,
+          onSonChanged: onSonChanged,
+        ),
+      ),
     );
   }
 }

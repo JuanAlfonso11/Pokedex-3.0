@@ -55,14 +55,16 @@ class DatabaseHelper {
     try {
       await _connection.transaction((ctx) async {
         await ctx.query('''
-          CREATE TABLE IF NOT EXISTS pokemons (
-            id SERIAL PRIMARY KEY,
-            favorite INTEGER,
-            name TEXT,
-            type1 TEXT,
-            type2 TEXT
-          )
-        ''');
+  CREATE TABLE IF NOT EXISTS pokemons (
+    id SERIAL PRIMARY KEY,
+    favorite INTEGER,
+    name TEXT,
+    type1 TEXT,
+    type2 TEXT,
+    generation INTEGER
+  )
+''');
+
         await ctx.query('''
           CREATE TABLE IF NOT EXISTS hash (
             id SERIAL PRIMARY KEY,

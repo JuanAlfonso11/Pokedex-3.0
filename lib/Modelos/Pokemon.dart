@@ -8,7 +8,6 @@ class Pokemon {
   String type2;
   List<String> sprites;
 
-
   Pokemon({
     required this.id,
     required this.favorite,
@@ -17,7 +16,6 @@ class Pokemon {
     required this.type2,
     required this.sprites,
   });
-
 
   // columns in the database.
   Map<String, dynamic> toMap() {
@@ -30,21 +28,41 @@ class Pokemon {
     };
   }
 
-  bool favoriteBool(){
+  bool favoriteBool() {
     return favorite == 1 ? true : false;
   }
 
+  // Calculate generation based on the Pokémon ID
+  int get generation {
+    if (id >= 1 && id <= 151) {
+      return 1; // Generation I
+    } else if (id >= 152 && id <= 251) {
+      return 2; // Generation II
+    } else if (id >= 252 && id <= 386) {
+      return 3; // Generation III
+    } else if (id >= 387 && id <= 493) {
+      return 4; // Generation IV
+    } else if (id >= 494 && id <= 649) {
+      return 5; // Generation V
+    } else if (id >= 650 && id <= 721) {
+      return 6; // Generation VI
+    } else if (id >= 722 && id <= 809) {
+      return 7; // Generation VII
+    } else if (id >= 810 && id <= 898) {
+      return 8; // Generation VIII
+    } else {
+      return 0; // Unknown Generation
+    }
+  }
 }
 
-Pokemon getPokemonId(List<Pokemon> pokemons, int id){
-
+Pokemon getPokemonId(List<Pokemon> pokemons, int id) {
   Pokemon ret = pokemons[0];
   for (var element in pokemons) {
-    if (element.id == id){
+    if (element.id == id) {
       return element;
     }
   }
-
   return ret;
 }
 

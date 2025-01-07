@@ -207,4 +207,34 @@ class PokemonV2Pokemon {
     "pokemon_v2_pokemonsprites":
     List<dynamic>.from(pokemonV2PokemonSprites.map((x) => x.toJson())),
   };
+
+  /// Método de generación para crear un Pokémon con valores predeterminados.
+  factory PokemonV2Pokemon.generate({
+    required int id,
+    required String name,
+    required List<String> types,
+    required String spriteUrl,
+  }) {
+    return PokemonV2Pokemon(
+      id: id,
+      name: name,
+      pokemonV2PokemonTypes: types
+          .map((type) => PokemonV2PokemonTypes(
+          pokemonV2Type: PokemonV2Type(id: id, name: type)))
+          .toList(),
+      pokemonV2PokemonSprites: [
+        PokemonV2PokemonSprites(
+          sprites: Sprites(
+            frontDefault: spriteUrl,
+            other: Other(
+              dreamWorld: DreamWorld(frontDefault: spriteUrl),
+              home: Home(frontDefault: spriteUrl),
+              officialArtwork: OfficialArtwork(frontDefault: spriteUrl),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
+
